@@ -1,103 +1,101 @@
-import Image from "next/image";
+// app/page.js
+import ProxiesSite from './components/ProxiesSite'
 
-export default function Home() {
+// Load content data at build time
+async function getPageData() {
+  try {
+    // Import content functions - no need for navigation anymore
+    const { getAllContent, buildSearchIndex } = await import('../lib/content')
+    
+    const content = await getAllContent()
+    console.log(`Loaded ${content.length} content pages`)
+    
+    if (content.length === 0) {
+      console.log('No content found, using fallback')
+      return {
+        content: [],
+        searchIndex: []
+      }
+    }
+    
+    const searchIndex = await buildSearchIndex()
+    
+    console.log(`Built search index with ${searchIndex.length} entries`)
+    
+    return {
+      content,
+      searchIndex
+    }
+  } catch (error) {
+    console.error('Error loading content:', error)
+    
+    // Return empty data if content loader fails
+    return {
+      content: [],
+      searchIndex: []
+    }
+  }
+}
+
+export default async function Home() {
+  const { content, searchIndex } = await getPageData()
+  
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <ProxiesSite 
+      initialContent={content}
+      initialSearchIndex={searchIndex}
+      // Removed navigation prop - using static nav in component
+    />
+  )
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+// Enhanced metadata for SEO
+export const metadata = {
+  title: 'yAcademy Proxies Research | Smart Contract Proxy Patterns & Security',
+  description: 'Comprehensive guide to smart contract proxy patterns, security vulnerabilities, and best practices for Web3 developers and auditors. Research by yAcademy.',
+  keywords: [
+    'smart contracts',
+    'proxy patterns', 
+    'Web3 security',
+    'Ethereum',
+    'blockchain',
+    'yAcademy',
+    'delegatecall',
+    'upgradeable contracts',
+    'proxy vulnerabilities',
+    'smart contract auditing'
+  ].join(', '),
+  authors: [{ name: 'yAcademy', url: 'https://yacademy.dev' }],
+  openGraph: {
+    title: 'yAcademy Proxies Research',
+    description: 'Comprehensive guide to smart contract proxy patterns and security vulnerabilities',
+    url: 'https://proxies.yacademy.dev',
+    siteName: 'yAcademy Proxies Research',
+    type: 'website',
+    images: [
+      {
+        url: '/images/og-image.png', // Add this image to your public folder
+        width: 1200,
+        height: 630,
+        alt: 'yAcademy Proxies Research',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'yAcademy Proxies Research',
+    description: 'Comprehensive guide to smart contract proxy patterns and security',
+    images: ['/images/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }

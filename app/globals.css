@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Custom brand colors from your old website */
+  --black: #080444;
+  --purple: #BF5AF2;
+  --emeraldlight: #3ee680;
+  --darkgreen: #15803d;
+  
+  /* RGB versions for opacity usage */
+  --emeraldlight-rgb: 62, 230, 128;
+  --darkgreen-rgb: 21, 128, 61;
+  --black-rgb: 8, 4, 68;
+  --purple-rgb: 191, 90, 242;
 }
 
 @theme inline {
@@ -10,6 +22,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Add your custom colors to the theme */
+  --color-black-custom: var(--black);
+  --color-purple-custom: var(--purple);
+  --color-emeraldlight: var(--emeraldlight);
+  --color-darkgreen: var(--darkgreen);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +41,85 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom utility classes for your brand colors */
+.text-emeraldlight {
+  color: var(--emeraldlight);
+}
+
+.text-darkgreen {
+  color: var(--darkgreen);
+}
+
+.text-black-custom {
+  color: var(--black);
+}
+
+.text-purple-custom {
+  color: var(--purple);
+}
+
+.bg-emeraldlight {
+  background-color: var(--emeraldlight);
+}
+
+.bg-darkgreen {
+  background-color: var(--darkgreen);
+}
+
+.bg-black-custom {
+  background-color: var(--black);
+}
+
+.bg-purple-custom {
+  background-color: var(--purple);
+}
+
+/* Opacity variations using RGB values */
+.bg-emeraldlight-25 {
+  background-color: rgba(var(--emeraldlight-rgb), 0.25);
+}
+
+.bg-emeraldlight-5 {
+  background-color: rgba(var(--emeraldlight-rgb), 0.05);
+}
+
+.bg-darkgreen-5 {
+  background-color: rgba(var(--darkgreen-rgb), 0.05);
+}
+
+.bg-white-5 {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Hover state utilities */
+.hover-text-emeraldlight:hover {
+  color: var(--emeraldlight);
+}
+
+.hover-text-darkgreen:hover {
+  color: var(--darkgreen);
+}
+
+.hover-bg-emeraldlight-5:hover {
+  background-color: rgba(var(--emeraldlight-rgb), 0.05);
+}
+
+.hover-bg-darkgreen-5:hover {
+  background-color: rgba(var(--darkgreen-rgb), 0.05);
+}
+
+.hover-bg-white-5:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Transition utilities */
+.duration-700 {
+  transition-duration: 700ms;
+}
+
+/* Content container with wider max-width for tables */
+.content-container {
+  max-width: 1400px; /* Increased from 1024px (max-w-4xl) */
 }
