@@ -1,8 +1,16 @@
-// app/page.js
+// app/page.tsx
+import React from 'react'
 import ProxiesSite from './components/ProxiesSite'
+import { ContentData, SearchIndexItem } from '@/lib/content'
+import { Metadata } from 'next'
+
+interface PageData {
+  content: ContentData[];
+  searchIndex: SearchIndexItem[];
+}
 
 // Load content data at build time
-async function getPageData() {
+async function getPageData(): Promise<PageData> {
   try {
     // Import content functions - no need for navigation anymore
     const { getAllContent, buildSearchIndex } = await import('../lib/content')
@@ -50,7 +58,7 @@ export default async function Home() {
 }
 
 // Enhanced metadata for SEO
-export const metadata = {
+export const metadata: Metadata = {
   title: 'yAcademy Proxies Research | Smart Contract Proxy Patterns & Security',
   description: 'Comprehensive guide to smart contract proxy patterns, security vulnerabilities, and best practices for Web3 developers and auditors. Research by yAcademy.',
   keywords: [
