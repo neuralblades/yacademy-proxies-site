@@ -23,7 +23,7 @@ export function Navbar({ menuOpen, setMenuOpen }: NavbarProps) {
     <div className="w-full flex h-24 items-center justify-between top-0 py-6">
       <div className="flex flex-row gap-4 text-emeraldlight items-center text-xl lg:ml-[20vw] ml-4">
         <div className="flex items-center gap-3">
-          <img alt="yAcademy Proxies" src="assets/images/logo.svg" className="h-10" />
+          <img alt="yAcademy Proxies" src="/assets/images/logo.svg" className="h-10" />
         </div>
       </div>
       <button

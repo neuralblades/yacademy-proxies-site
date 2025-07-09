@@ -1,59 +1,10 @@
 // app/page.tsx
 import React from 'react'
-import App from './components/App'
-import { ContentData, SearchIndexItem } from '@/lib/content'
+import LandingPage from './components/LandingPage'
 import { Metadata } from 'next'
 
-interface PageData {
-  content: ContentData[];
-  searchIndex: SearchIndexItem[];
-}
-
-// Load content data at build time
-async function getPageData(): Promise<PageData> {
-  try {
-    // Import content functions - no need for navigation anymore
-    const { getAllContent, buildSearchIndex } = await import('../lib/content')
-    
-    const content = await getAllContent()
-    console.log(`Loaded ${content.length} content pages`)
-    
-    if (content.length === 0) {
-      console.log('No content found, using fallback')
-      return {
-        content: [],
-        searchIndex: []
-      }
-    }
-    
-    const searchIndex = await buildSearchIndex()
-    
-    console.log(`Built search index with ${searchIndex.length} entries`)
-    
-    return {
-      content,
-      searchIndex
-    }
-  } catch (error) {
-    console.error('Error loading content:', error)
-    
-    // Return empty data if content loader fails
-    return {
-      content: [],
-      searchIndex: []
-    }
-  }
-}
-
-export default async function Home() {
-  const { content, searchIndex } = await getPageData()
-  
-  return (
-    <App 
-      initialContent={content}
-      initialSearchIndex={searchIndex}
-    />
-  )
+export default function Home() {
+  return <LandingPage />
 }
 
 // Enhanced metadata for SEO

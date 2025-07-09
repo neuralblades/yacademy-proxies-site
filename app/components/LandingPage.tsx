@@ -1,13 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Shield, Cpu, ArrowRight, BookOpen, Users, Target } from 'lucide-react';
 
-interface LandingPageProps {
-  onNavigateToSection: (section: 'proxies' | 'mpc') => void;
-}
-
-export default function LandingPage({ onNavigateToSection }: LandingPageProps) {
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
@@ -26,13 +23,13 @@ export default function LandingPage({ onNavigateToSection }: LandingPageProps) {
                 </p>
                 <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
                   <div className="rounded-md shadow">
-                    <button
-                      onClick={() => onNavigateToSection('proxies')}
+                    <Link
+                      href="/proxies"
                       className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg md:px-10 transition-colors"
                     >
                       Start Exploring
                       <ArrowRight className="ml-2" size={20} />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -55,9 +52,9 @@ export default function LandingPage({ onNavigateToSection }: LandingPageProps) {
 
           <div className="mt-16 grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Proxies Research Card */}
-            <div 
-              onClick={() => onNavigateToSection('proxies')}
-              className="relative group bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+            <Link 
+              href="/proxies"
+              className="relative group bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 block"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
               <div className="relative p-8">
@@ -104,12 +101,12 @@ export default function LandingPage({ onNavigateToSection }: LandingPageProps) {
                   <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </div>
+            </Link>
 
             {/* MPC Research Card */}
-            <div 
-              onClick={() => onNavigateToSection('mpc')}
-              className="relative group bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+            <Link 
+              href="/mpc"
+              className="relative group bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 block"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
               <div className="relative p-8">
@@ -144,7 +141,7 @@ export default function LandingPage({ onNavigateToSection }: LandingPageProps) {
                   <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </div>

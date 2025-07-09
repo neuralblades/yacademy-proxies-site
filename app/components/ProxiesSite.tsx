@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Search, ChevronRight, ChevronDown, Book, Shield, Code, FileText, ExternalLink, Menu, X, List, ArrowLeft } from 'lucide-react';
 import { Navbar, MobileNavbar } from './Navbar';
 import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ContentData, SearchIndexItem } from '@/lib/content';
 import '../markdown.css';
@@ -15,7 +17,7 @@ interface SearchResult extends SearchIndexItem {
 interface ProxiesSiteProps {
   initialContent?: ContentData[];
   initialSearchIndex?: SearchIndexItem[];
-  onNavigateBack?: () => void;
+  initialSlug?: string;
 }
 
 // Separate client-only components to prevent hydration issues
@@ -180,12 +182,14 @@ function MobileMenuComponent({
 const ProxiesSite: React.FC<ProxiesSiteProps> = ({ 
   initialContent = [], 
   initialSearchIndex = [],
-  onNavigateBack
+  initialSlug
 }) => {
+  const router = useRouter();
+  
   // State management
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => 
-    initialContent.length > 0 ? initialContent[0].slug : 'home'
+    initialSlug || (initialContent.length > 0 ? initialContent[0].slug : 'home')
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -206,6 +210,57 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Handle hash fragments on page load and changes
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const scrollToHash = (hash: string, retries = 0) => {
+      const element = document.querySelector(hash);
+      if (element) {
+        console.log(`Scrolling to ${hash}`, element);
+        
+        // Get the element's position
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset for fixed header + padding
+        
+        // Smooth scroll to position with offset
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      } else if (retries < 10) {
+        // Retry after a short delay if element not found
+        console.log(`Element ${hash} not found, retrying... (${retries + 1}/10)`);
+        setTimeout(() => scrollToHash(hash, retries + 1), 200);
+      } else {
+        console.log(`Element ${hash} not found after ${retries} retries`);
+      }
+    };
+
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      console.log('Hash change detected:', hash);
+      if (hash) {
+        // Small delay for smooth UX
+        setTimeout(() => scrollToHash(hash), 100);
+      }
+    };
+
+    // Handle initial load with a longer delay
+    const initialHash = window.location.hash;
+    if (initialHash) {
+      console.log('Initial hash:', initialHash);
+      setTimeout(() => scrollToHash(initialHash), 500);
+    }
+    
+    // Listen for hash changes (when clicking TOC links)
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [isClient]);
   
   // Memoized search index
   const searchIndex = useMemo(() => {
@@ -309,13 +364,30 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
       [sectionId]: !prev[sectionId]
     }));
   }, []);
+
+  // Navigate to different pages using Next.js router
+  const navigateToPage = useCallback((newPage: string) => {
+    // Handle parent categories that don't have their own pages
+    const parentToChildMap: Record<string, string> = {
+      'proxies-deep-dive': 'proxies-list'
+    };
+    
+    // If it's a parent category, navigate to its first child
+    const targetPage = parentToChildMap[newPage] || newPage;
+    
+    if (targetPage === 'home') {
+      router.push('/proxies');
+    } else {
+      router.push(`/proxies/${targetPage}`);
+    }
+  }, [router]);
   
   const handleSearchResultClick = useCallback((result: SearchResult) => {
     const pageSlug = result.id.split('-section-')[0];
-    setCurrentPage(pageSlug);
+    navigateToPage(pageSlug);
     setSearchQuery('');
     setIsSearchFocused(false);
-  }, []);
+  }, [navigateToPage]);
   
   // Memoized sidebar items
   const sidebarItems = useMemo((): SidebarItem[] => [
@@ -405,6 +477,77 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
   
   const currentPageData = getCurrentPageData();
   
+  // Handle hash fragments after content is available
+  useEffect(() => {
+    if (!isClient || !currentPageData) return;
+    
+    const scrollToHash = (hash: string, retries = 0) => {
+      const element = document.querySelector(hash);
+      if (element) {
+        console.log(`Scrolling to ${hash}`, element);
+        
+        // Get the element's position
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset for fixed header + padding
+        
+        // Smooth scroll to position with offset
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      } else if (retries < 10) {
+        // Log available elements for debugging
+        if (retries === 0) {
+          const allElements = document.querySelectorAll('[id]');
+          console.log('Available elements with IDs:', Array.from(allElements).map(el => `#${el.id}`));
+          
+          // Also check for headings that might have anchors
+          const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          console.log('Available headings:', Array.from(headings).map(h => ({
+            tag: h.tagName,
+            id: h.id,
+            text: h.textContent,
+            innerHTML: h.innerHTML
+          })));
+        }
+        
+        console.log(`Element ${hash} not found, retrying... (${retries + 1}/10)`);
+        setTimeout(() => scrollToHash(hash, retries + 1), 200);
+      } else {
+        console.log(`Element ${hash} not found after ${retries} retries`);
+      }
+    };
+
+    const hash = window.location.hash;
+    if (hash) {
+      console.log('Processing hash for current page:', hash);
+      console.log('Current page slug:', currentPageData.slug);
+      console.log('Current page content length:', currentPageData.contentHtml?.length || 0);
+      
+      // Dynamically find which page contains this hash
+      const findPageWithHash = (hashId: string) => {
+        const cleanHash = hashId.replace('#', '');
+        
+        for (const content of initialContent) {
+          if (content.contentHtml && content.contentHtml.includes(`id="${cleanHash}"`)) {
+            return content.slug;
+          }
+        }
+        return null;
+      };
+      
+      const targetPage = findPageWithHash(hash);
+      if (targetPage && currentPageData.slug !== targetPage) {
+        console.log(`Hash ${hash} found on page ${targetPage}, navigating...`);
+        setCurrentPage(targetPage);
+        return; // Let the next render handle the scroll
+      }
+      
+      // Longer delay to ensure content is rendered
+      setTimeout(() => scrollToHash(hash), 1000);
+    }
+  }, [isClient, currentPageData]);
+  
   // Floating TOC
   const floatingTOC = useMemo(() => {
     if (!currentPageData.contentHtml) return [];
@@ -476,9 +619,9 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
       item.children?.some(child => child.id === currentPage)
     );
     if (parentPage) {
-      setCurrentPage(parentPage.id);
+      navigateToPage(parentPage.id);
     }
-  }, [currentPage, sidebarItems]);
+  }, [currentPage, sidebarItems, navigateToPage]);
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
@@ -519,7 +662,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
             setIsSidebarOpen={setIsSidebarOpen}
             sidebarItems={sidebarItems}
             currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
             expandedSections={expandedSections}
             toggleSection={toggleSection}
             sectionType="proxies"
@@ -535,17 +678,15 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
             <div className="max-w-4xl"> 
               <div className="flex items-center mb-4">
                 {/* Back Button */}
-                {onNavigateBack && (
-                  <button
-                    onClick={onNavigateBack}
-                    className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
-                    title="Back to Landing"
-                    aria-label="Back to landing page"
-                  >
-                    <ArrowLeft size={20} />
-                    <span className="hidden sm:inline">Back</span>
-                  </button>
-                )}
+                <Link
+                  href="/"
+                  className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                  title="Back to Landing"
+                  aria-label="Back to landing page"
+                >
+                  <ArrowLeft size={20} />
+                  <span className="hidden sm:inline">Back</span>
+                </Link>
 
                 {/* Mobile sidebar toggle button */}
                 {isClient && (
@@ -613,20 +754,30 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
             <div className="content-container">
               <article>
                 {/* Breadcrumb Navigation */}
-                <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6" aria-label="Breadcrumb">
-                  <button
-                    onClick={handleBreadcrumbClick}
-                    className="hover:text-green-600 transition-colors"
-                  >
-                    {sidebarItems.find(item => 
-                      item.children?.some(child => child.id === currentPage)
-                    )?.title || 'Security Guide to Proxy Vulns'}
-                  </button>
-                  <span>/</span>
-                  <span className="text-gray-900">
-                    {currentPageData.title}
-                  </span>
-                </nav>
+                {(() => {
+                  const parentPage = sidebarItems.find(item => 
+                    item.children?.some(child => child.id === currentPage)
+                  );
+                  
+                  // Only show breadcrumb if there's actually a parent
+                  if (parentPage) {
+                    return (
+                      <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6" aria-label="Breadcrumb">
+                        <button
+                          onClick={handleBreadcrumbClick}
+                          className="hover:text-green-600 transition-colors"
+                        >
+                          {parentPage.title}
+                        </button>
+                        <span>/</span>
+                        <span className="text-gray-900">
+                          {currentPageData.title}
+                        </span>
+                      </nav>
+                    );
+                  }
+                  return null;
+                })()}
                 
                 {/* Page Content */}
                 <div className="prose prose-gray max-w-none">

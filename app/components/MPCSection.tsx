@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Cpu, Clock, ArrowLeft, ExternalLink, List } from 'lucide-react';
+import { Search, Cpu, Clock, ArrowLeft, ExternalLink, List, Shield, Code, FileText } from 'lucide-react';
 import { Navbar, MobileNavbar } from './Navbar';
 import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 interface MPCSectionProps {
-  onNavigateBack: () => void;
+  initialSlug?: string;
 }
 
 // Skeleton components for loading states
@@ -43,8 +45,17 @@ function SidebarSkeleton() {
 
 // MPC Sidebar Items
 const getMPCSidebarItems = (): SidebarItem[] => [
-  { id: 'mpc-research', title: 'MPC Research', icon: Cpu },
-  { id: 'coming-soon', title: 'Coming Soon', icon: Clock }
+  { id: 'home', title: 'yAcademy MPC Research', icon: Cpu },
+  { id: 'protocol-basics', title: 'Protocol Basics', icon: Code },
+  { 
+    id: 'security-analysis', 
+    title: 'Security Analysis', 
+    icon: Shield,
+    children: [
+      { id: 'vulnerability-guide', title: 'Vulnerability Guide' },
+      { id: 'implementation-guide', title: 'Implementation Guide' }
+    ]
+  }
 ];
 
 // MPC Search Component
@@ -100,17 +111,186 @@ const ClientOnlyMPCSidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
   loading: () => <SidebarSkeleton />
 });
 
-export default function MPCSection({ onNavigateBack }: MPCSectionProps) {
+export default function MPCSection({ initialSlug }: MPCSectionProps) {
+  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('mpc-research');
+  const [currentPage, setCurrentPage] = useState(initialSlug || 'home');
   
   const sidebarItems = getMPCSidebarItems();
+
+  // Navigate to different pages using Next.js router
+  const navigateToPage = useCallback((newPage: string) => {
+    if (newPage === 'home') {
+      router.push('/mpc');
+    } else {
+      router.push(`/mpc/${newPage}`);
+    }
+    setCurrentPage(newPage);
+  }, [router]);
+
+  // Render content based on current page
+  const renderMPCContent = () => {
+    switch (currentPage) {
+      case 'home':
+        return (
+          <div className="text-center py-16">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-green-100 rounded-full">
+                <Cpu className="h-16 w-16 text-green-600" />
+              </div>
+            </div>
+            
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              MPC Security Research
+            </h1>
+            
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Advanced research on multi-party computation protocols, privacy-preserving 
+              technologies, and cryptographic security analysis.
+            </p>
+
+            <div className="inline-flex items-center px-6 py-3 rounded-full text-lg font-medium bg-green-100 text-green-800 mb-8">
+              <Clock className="h-5 w-5 mr-2" />
+              Coming Soon
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-8 text-left max-w-2xl mx-auto">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                What to Expect
+              </h2>
+              <ul className="space-y-3 text-gray-600">
+                <li className="flex items-start">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Comprehensive analysis of MPC protocol security</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Privacy-preserving computation vulnerabilities</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Cryptographic implementation best practices</span>
+                </li>
+                <li className="flex items-start">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <span>Security audit guidelines for MPC systems</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        );
+      
+      case 'protocol-basics':
+        return (
+          <div className="py-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Protocol Basics</h1>
+            <div className="prose prose-gray max-w-none">
+              <p className="text-lg text-gray-600 mb-6">
+                Understanding the fundamental concepts of multi-party computation protocols.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h3 className="text-green-800 font-semibold mb-2">Coming Soon</h3>
+                <p className="text-green-700">
+                  Detailed content about MPC protocol basics will be available here.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'security-analysis':
+        return (
+          <div className="py-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Security Analysis</h1>
+            <div className="prose prose-gray max-w-none">
+              <p className="text-lg text-gray-600 mb-6">
+                Comprehensive security analysis framework for MPC implementations.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h3 className="text-green-800 font-semibold mb-2">Coming Soon</h3>
+                <p className="text-green-700">
+                  Security analysis methodologies and frameworks will be documented here.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'vulnerability-guide':
+        return (
+          <div className="py-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Vulnerability Guide</h1>
+            <div className="prose prose-gray max-w-none">
+              <p className="text-lg text-gray-600 mb-6">
+                Common vulnerabilities in MPC implementations and how to prevent them.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h3 className="text-green-800 font-semibold mb-2">Coming Soon</h3>
+                <p className="text-green-700">
+                  Vulnerability patterns and mitigation strategies will be covered here.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'implementation-guide':
+        return (
+          <div className="py-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">Implementation Guide</h1>
+            <div className="prose prose-gray max-w-none">
+              <p className="text-lg text-gray-600 mb-6">
+                Best practices for implementing secure MPC protocols.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h3 className="text-green-800 font-semibold mb-2">Coming Soon</h3>
+                <p className="text-green-700">
+                  Implementation guidelines and security recommendations will be available here.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return (
+          <div className="text-center py-16">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-green-100 rounded-full">
+                <Cpu className="h-16 w-16 text-green-600" />
+              </div>
+            </div>
+            
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              MPC Security Research
+            </h1>
+            
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Advanced research on multi-party computation protocols, privacy-preserving 
+              technologies, and cryptographic security analysis.
+            </p>
+
+            <div className="inline-flex items-center px-6 py-3 rounded-full text-lg font-medium bg-green-100 text-green-800 mb-8">
+              <Clock className="h-5 w-5 mr-2" />
+              Coming Soon
+            </div>
+          </div>
+        );
+    }
+  };
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  // Update current page when initialSlug changes
+  useEffect(() => {
+    if (initialSlug) {
+      setCurrentPage(initialSlug);
+    }
+  }, [initialSlug]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -166,7 +346,7 @@ export default function MPCSection({ onNavigateBack }: MPCSectionProps) {
             setIsSidebarOpen={setIsSidebarOpen}
             sidebarItems={sidebarItems}
             currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
             sectionType="mpc"
           />
         ) : (
@@ -180,15 +360,15 @@ export default function MPCSection({ onNavigateBack }: MPCSectionProps) {
             <div className="max-w-4xl"> 
               <div className="flex items-center mb-4">
                 {/* Back Button */}
-                <button
-                  onClick={onNavigateBack}
+                <Link
+                  href="/"
                   className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
                   title="Back to Landing"
                   aria-label="Back to landing page"
                 >
                   <ArrowLeft size={20} />
                   <span className="hidden sm:inline">Back</span>
-                </button>
+                </Link>
 
                 {/* Mobile sidebar toggle button */}
                 {isClient && (
@@ -218,51 +398,7 @@ export default function MPCSection({ onNavigateBack }: MPCSectionProps) {
               <article>
                 {/* Main Content */}
                 <div className="max-w-4xl">
-                  <div className="text-center py-16">
-                    <div className="flex justify-center mb-6">
-                      <div className="p-4 bg-green-100 rounded-full">
-                        <Cpu className="h-16 w-16 text-green-600" />
-                      </div>
-                    </div>
-                    
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                      MPC Security Research
-                    </h1>
-                    
-                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                      Advanced research on multi-party computation protocols, privacy-preserving 
-                      technologies, and cryptographic security analysis.
-                    </p>
-
-                    <div className="inline-flex items-center px-6 py-3 rounded-full text-lg font-medium bg-green-100 text-green-800 mb-8">
-                      <Clock className="h-5 w-5 mr-2" />
-                      Coming Soon
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-8 text-left max-w-2xl mx-auto">
-                      <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                        What to Expect
-                      </h2>
-                      <ul className="space-y-3 text-gray-600">
-                        <li className="flex items-start">
-                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span>Comprehensive analysis of MPC protocol security</span>
-                        </li>
-                        <li className="flex items-start">
-                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span>Privacy-preserving computation vulnerabilities</span>
-                        </li>
-                        <li className="flex items-start">
-                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span>Cryptographic implementation best practices</span>
-                        </li>
-                        <li className="flex items-start">
-                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                          <span>Security audit guidelines for MPC systems</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                  {renderMPCContent()}
                 </div>
                 
                 {/* Footer */}
