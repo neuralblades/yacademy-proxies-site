@@ -1,6 +1,6 @@
 // app/page.tsx
 import React from 'react'
-import ProxiesSite from './components/ProxiesSite'
+import App from './components/App'
 import { ContentData, SearchIndexItem } from '@/lib/content'
 import { Metadata } from 'next'
 
@@ -49,10 +49,9 @@ export default async function Home() {
   const { content, searchIndex } = await getPageData()
   
   return (
-    <ProxiesSite 
+    <App 
       initialContent={content}
       initialSearchIndex={searchIndex}
-      // Removed navigation prop - using static nav in component
     />
   )
 }

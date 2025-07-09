@@ -1,0 +1,290 @@
+'use client';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Cpu, Clock, ArrowLeft, ExternalLink, List } from 'lucide-react';
+import { Navbar, MobileNavbar } from './Navbar';
+import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
+import dynamic from 'next/dynamic';
+
+interface MPCSectionProps {
+  onNavigateBack: () => void;
+}
+
+// Skeleton components for loading states
+function SearchSkeleton() {
+  return (
+    <div className="relative max-w-lg">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <div className="w-full pl-10 pr-4 py-3 rounded-lg border bg-gray-50 border-gray-300 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-48"></div>
+      </div>
+    </div>
+  );
+}
+
+function SidebarSkeleton() {
+  return (
+    <aside className="hidden md:block sticky top-16 w-72 h-[calc(100vh-4rem)] bg-gray-50 border-r border-gray-200 overflow-y-auto">
+      <div className="p-6">
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+// MPC Sidebar Items
+const getMPCSidebarItems = (): SidebarItem[] => [
+  { id: 'mpc-research', title: 'MPC Research', icon: Cpu },
+  { id: 'coming-soon', title: 'Coming Soon', icon: Clock }
+];
+
+// MPC Search Component
+function MPCSearchComponent() {
+  return (
+    <div className="relative max-w-lg">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <input
+        type="text"
+        placeholder="Search MPC research... (Coming soon)"
+        disabled
+        className="w-full pl-10 pr-4 py-3 rounded-lg border bg-gray-50 border-gray-300 text-gray-500 cursor-not-allowed"
+      />
+    </div>
+  );
+}
+
+// Mobile Menu Component
+function MobileMenuComponent({ 
+  isMobileMenuOpen, 
+  setIsMobileMenuOpen 
+}: { 
+  isMobileMenuOpen: boolean; 
+  setIsMobileMenuOpen: (open: boolean) => void; 
+}) {
+  if (!isMobileMenuOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 lg:hidden">
+      <div className="fixed inset-0" onClick={() => setIsMobileMenuOpen(false)} />
+      <div className="fixed top-0 left-0 w-full h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+        <MobileNavbar 
+          setMenuOpen={setIsMobileMenuOpen}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Dynamic imports for client-only components
+const ClientOnlyMPCSearch = dynamic(() => Promise.resolve(MPCSearchComponent), {
+  ssr: false,
+  loading: () => <SearchSkeleton />
+});
+
+const ClientOnlyMobileMenu = dynamic(() => Promise.resolve(MobileMenuComponent), {
+  ssr: false,
+  loading: () => null
+});
+
+const ClientOnlyMPCSidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
+  ssr: false,
+  loading: () => <SidebarSkeleton />
+});
+
+export default function MPCSection({ onNavigateBack }: MPCSectionProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState('mpc-research');
+  
+  const sidebarItems = getMPCSidebarItems();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+        setIsSidebarOpen(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isClient]);
+
+  return (
+    <div className="min-h-screen bg-white text-gray-900">
+      {/* Header with Navbar */}
+      <header className="sticky top-0 z-50 bg-white border-gray-200 border-b">
+        {isClient ? (
+          <Navbar 
+            menuOpen={isMobileMenuOpen}
+            setMenuOpen={setIsMobileMenuOpen}
+          />
+        ) : (
+          <div className="h-16 bg-white border-b border-gray-200 animate-pulse">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="h-8 bg-gray-200 rounded w-32"></div>
+                <div className="h-8 bg-gray-200 rounded w-24"></div>
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Mobile Menu */}
+      {isClient && (
+        <ClientOnlyMobileMenu
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+        />
+      )}
+
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto flex relative">
+        
+        {/* Sidebar */}
+        {isClient ? (
+          <ClientOnlyMPCSidebar
+            isSidebarOpen={isSidebarOpen}
+            setIsSidebarOpen={setIsSidebarOpen}
+            sidebarItems={sidebarItems}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            sectionType="mpc"
+          />
+        ) : (
+          <SidebarSkeleton />
+        )}
+
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 md:ml-0">
+          {/* Search Section */}
+          <div className="px-8 py-6 md:px-12 lg:px-16 border-b border-gray-200">
+            <div className="max-w-4xl"> 
+              <div className="flex items-center mb-4">
+                {/* Back Button */}
+                <button
+                  onClick={onNavigateBack}
+                  className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                  title="Back to Landing"
+                  aria-label="Back to landing page"
+                >
+                  <ArrowLeft size={20} />
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+
+                {/* Mobile sidebar toggle button */}
+                {isClient && (
+                  <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+                    title="Toggle Sidebar"
+                    aria-label="Toggle sidebar"
+                  >
+                    <List size={20} />
+                  </button>
+                )}
+              </div>
+              
+              {/* Search Bar */}
+              {isClient ? (
+                <ClientOnlyMPCSearch />
+              ) : (
+                <SearchSkeleton />
+              )}
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div className="px-8 py-8 md:px-12 lg:px-16">
+            <div className="content-container">
+              <article>
+                {/* Main Content */}
+                <div className="max-w-4xl">
+                  <div className="text-center py-16">
+                    <div className="flex justify-center mb-6">
+                      <div className="p-4 bg-green-100 rounded-full">
+                        <Cpu className="h-16 w-16 text-green-600" />
+                      </div>
+                    </div>
+                    
+                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                      MPC Security Research
+                    </h1>
+                    
+                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                      Advanced research on multi-party computation protocols, privacy-preserving 
+                      technologies, and cryptographic security analysis.
+                    </p>
+
+                    <div className="inline-flex items-center px-6 py-3 rounded-full text-lg font-medium bg-green-100 text-green-800 mb-8">
+                      <Clock className="h-5 w-5 mr-2" />
+                      Coming Soon
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-8 text-left max-w-2xl mx-auto">
+                      <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                        What to Expect
+                      </h2>
+                      <ul className="space-y-3 text-gray-600">
+                        <li className="flex items-start">
+                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <span>Comprehensive analysis of MPC protocol security</span>
+                        </li>
+                        <li className="flex items-start">
+                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <span>Privacy-preserving computation vulnerabilities</span>
+                        </li>
+                        <li className="flex items-start">
+                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <span>Cryptographic implementation best practices</span>
+                        </li>
+                        <li className="flex items-start">
+                          <div className="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                          <span>Security audit guidelines for MPC systems</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Footer */}
+                <footer className="mt-12 pt-8 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Research effort led by yAcademy</span>
+                    <a
+                      href="https://github.com/YAcademy-Residents"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+                    >
+                      <ExternalLink size={16} />
+                      yAcademy GitHub
+                    </a>
+                  </div>
+                </footer>
+              </article>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

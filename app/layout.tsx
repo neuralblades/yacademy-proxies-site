@@ -1,6 +1,13 @@
 import './globals.css'
 import { Metadata } from 'next'
 import React from 'react'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'yAcademy Proxies Research',
@@ -13,8 +20,8 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={inter.variable}>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

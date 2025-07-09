@@ -1,18 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Search, ChevronRight, ChevronDown, Book, Shield, Code, FileText, ExternalLink, Github, Menu, X, List } from 'lucide-react';
+import { Search, ChevronRight, ChevronDown, Book, Shield, Code, FileText, ExternalLink, Menu, X, List, ArrowLeft } from 'lucide-react';
 import { Navbar, MobileNavbar } from './Navbar';
+import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
 import dynamic from 'next/dynamic';
 import { ContentData, SearchIndexItem } from '@/lib/content';
 import '../markdown.css';
-
-interface SidebarItem {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ size?: number }>;
-  children?: { id: string; title: string }[];
-}
 
 interface SearchResult extends SearchIndexItem {
   highlightedContent: string;
@@ -21,6 +15,7 @@ interface SearchResult extends SearchIndexItem {
 interface ProxiesSiteProps {
   initialContent?: ContentData[];
   initialSearchIndex?: SearchIndexItem[];
+  onNavigateBack?: () => void;
 }
 
 // Separate client-only components to prevent hydration issues
@@ -34,7 +29,7 @@ const ClientOnlyMobileMenu = dynamic(() => Promise.resolve(MobileMenuComponent),
   loading: () => null
 });
 
-const ClientOnlySidebar = dynamic(() => Promise.resolve(SidebarComponent), {
+const ClientOnlySidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
   ssr: false,
   loading: () => <SidebarSkeleton />
 });
@@ -180,159 +175,12 @@ function MobileMenuComponent({
   );
 }
 
-// Extracted sidebar component
-interface SidebarComponentProps {
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (open: boolean) => void;
-  sidebarItems: SidebarItem[];
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
-  expandedSections: Record<string, boolean>;
-  toggleSection: (section: string) => void;
-}
-
-function SidebarComponent({ 
-  isSidebarOpen, 
-  setIsSidebarOpen, 
-  sidebarItems, 
-  currentPage, 
-  setCurrentPage, 
-  expandedSections, 
-  toggleSection 
-}: SidebarComponentProps) {
-  return (
-    <>
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0" onClick={() => setIsSidebarOpen(false)} />
-        </div>
-      )}
-
-      {/* Sidebar */}
-      <aside className={`${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 fixed md:sticky top-16 left-0 md:left-auto z-50 w-64 md:w-72 h-screen md:h-[calc(100vh-4rem)] bg-gray-50 border-gray-200 border-r transition-transform duration-300 ease-in-out overflow-y-auto`}>
-        <div className="p-6">
-          <nav className="space-y-2" role="navigation" aria-label="Main navigation">
-            {sidebarItems.map((item) => (
-              <SidebarItem
-                key={item.id}
-                item={item}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
-                expandedSections={expandedSections}
-                toggleSection={toggleSection}
-                onItemClick={() => setIsSidebarOpen(false)}
-              />
-            ))}
-          </nav>
-          
-          <div className="mt-8 pt-4 border-t border-gray-200">
-            <a
-              href="https://yacademy.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ExternalLink size={16} />
-              yAcademy Website
-            </a>
-          </div>
-        </div>
-      </aside>
-    </>
-  );
-}
-
-// Extracted sidebar item component
-interface SidebarItemProps {
-  item: SidebarItem;
-  currentPage: string;
-  setCurrentPage: (page: string) => void;
-  expandedSections: Record<string, boolean>;
-  toggleSection: (section: string) => void;
-  onItemClick?: () => void;
-}
-
-function SidebarItem({ 
-  item, 
-  currentPage, 
-  setCurrentPage, 
-  expandedSections, 
-  toggleSection, 
-  onItemClick 
-}: SidebarItemProps) {
-  const handleItemClick = useCallback(() => {
-    setCurrentPage(item.id);
-    onItemClick?.();
-  }, [item.id, setCurrentPage, onItemClick]);
-
-  const handleToggleSection = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleSection(item.id);
-  }, [item.id, toggleSection]);
-
-  return (
-    <div>
-      <div className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-        currentPage === item.id
-          ? 'bg-green-100 text-green-700'
-          : 'hover:bg-gray-100'
-      }`}>
-        <button
-          onClick={handleItemClick}
-          className="flex items-center gap-3 flex-1 text-left"
-          aria-current={currentPage === item.id ? 'page' : undefined}
-        >
-          <item.icon size={18} />
-          <span className="text-sm font-medium">{item.title}</span>
-        </button>
-        
-        {item.children && (
-          <button
-            onClick={handleToggleSection}
-            className="p-1 hover:bg-gray-200 rounded transition-colors"
-            aria-expanded={expandedSections[item.id]}
-            aria-label={`${expandedSections[item.id] ? 'Collapse' : 'Expand'} ${item.title} section`}
-          >
-            {expandedSections[item.id] ? 
-              <ChevronDown size={16} /> : 
-              <ChevronRight size={16} />
-            }
-          </button>
-        )}
-      </div>
-      
-      {item.children && expandedSections[item.id] && (
-        <div className="ml-6 mt-2 space-y-1">
-          {item.children.map((child) => (
-            <button
-              key={child.id}
-              onClick={() => {
-                setCurrentPage(child.id);
-                onItemClick?.();
-              }}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                currentPage === child.id
-                  ? 'bg-green-100 text-green-700'
-                  : 'hover:bg-gray-100'
-              }`}
-              aria-current={currentPage === child.id ? 'page' : undefined}
-            >
-              {child.title}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Main component
 const ProxiesSite: React.FC<ProxiesSiteProps> = ({ 
   initialContent = [], 
-  initialSearchIndex = []
+  initialSearchIndex = [],
+  onNavigateBack
 }) => {
   // State management
   const [isClient, setIsClient] = useState(false);
@@ -674,6 +522,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
             setCurrentPage={setCurrentPage}
             expandedSections={expandedSections}
             toggleSection={toggleSection}
+            sectionType="proxies"
           />
         ) : (
           <SidebarSkeleton />
@@ -685,6 +534,19 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
           <div className="px-8 py-6 md:px-12 lg:px-16 border-b border-gray-200">
             <div className="max-w-4xl"> 
               <div className="flex items-center mb-4">
+                {/* Back Button */}
+                {onNavigateBack && (
+                  <button
+                    onClick={onNavigateBack}
+                    className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                    title="Back to Landing"
+                    aria-label="Back to landing page"
+                  >
+                    <ArrowLeft size={20} />
+                    <span className="hidden sm:inline">Back</span>
+                  </button>
+                )}
+
                 {/* Mobile sidebar toggle button */}
                 {isClient && (
                   <button
@@ -781,7 +643,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 hover:text-gray-900 transition-colors"
                     >
-                      <Github size={16} />
+                      <ExternalLink size={16} />
                       Edit on GitHub
                     </a>
                   </div>

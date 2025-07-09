@@ -102,7 +102,7 @@
   color: #dc2626;
   padding: 0.2em 0.4em;
   border-radius: 0.25rem;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Menlo, "Liberation Mono", "Courier New", monospace;
   font-size: 0.875em;
 }
 
@@ -118,7 +118,7 @@
   padding: 1rem;
   margin: 1.5rem 0;
   overflow-x: auto;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Menlo, "Liberation Mono", "Courier New", monospace;
   font-size: 0.875rem;
   line-height: 1.5;
 }
