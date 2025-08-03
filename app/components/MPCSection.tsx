@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Cpu, Clock, ArrowLeft, ExternalLink, List, Shield, Code, FileText } from 'lucide-react';
-import { Navbar, MobileNavbar } from './Navbar';
 import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -73,37 +72,10 @@ function MPCSearchComponent() {
   );
 }
 
-// Mobile Menu Component
-function MobileMenuComponent({ 
-  isMobileMenuOpen, 
-  setIsMobileMenuOpen 
-}: { 
-  isMobileMenuOpen: boolean; 
-  setIsMobileMenuOpen: (open: boolean) => void; 
-}) {
-  if (!isMobileMenuOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="fixed inset-0" onClick={() => setIsMobileMenuOpen(false)} />
-      <div className="fixed top-0 left-0 w-full h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
-        <MobileNavbar 
-          setMenuOpen={setIsMobileMenuOpen}
-        />
-      </div>
-    </div>
-  );
-}
-
 // Dynamic imports for client-only components
 const ClientOnlyMPCSearch = dynamic(() => Promise.resolve(MPCSearchComponent), {
   ssr: false,
   loading: () => <SearchSkeleton />
-});
-
-const ClientOnlyMobileMenu = dynamic(() => Promise.resolve(MobileMenuComponent), {
-  ssr: false,
-  loading: () => null
 });
 
 const ClientOnlyMPCSidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
@@ -114,7 +86,6 @@ const ClientOnlyMPCSidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
 export default function MPCSection({ initialSlug }: MPCSectionProps) {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialSlug || 'home');
   
@@ -298,7 +269,6 @@ export default function MPCSection({ initialSlug }: MPCSectionProps) {
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsMobileMenuOpen(false);
         setIsSidebarOpen(false);
       }
     };
@@ -309,33 +279,6 @@ export default function MPCSection({ initialSlug }: MPCSectionProps) {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Header with Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-gray-200 border-b">
-        {isClient ? (
-          <Navbar 
-            menuOpen={isMobileMenuOpen}
-            setMenuOpen={setIsMobileMenuOpen}
-          />
-        ) : (
-          <div className="h-16 bg-white border-b border-gray-200 animate-pulse">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="h-8 bg-gray-200 rounded w-32"></div>
-                <div className="h-8 bg-gray-200 rounded w-24"></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* Mobile Menu */}
-      {isClient && (
-        <ClientOnlyMobileMenu
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-        />
-      )}
-
       {/* Main Container */}
       <div className="max-w-7xl mx-auto flex relative">
         
@@ -356,11 +299,11 @@ export default function MPCSection({ initialSlug }: MPCSectionProps) {
         {/* Main Content */}
         <main className="flex-1 min-w-0 md:ml-0">
           {/* Search Section */}
-          <div className="px-8 py-6 md:px-12 lg:px-16 border-b border-gray-200">
+          <div className="px-8 py-6 md:px-12 lg:px-16">
             <div className="max-w-4xl"> 
               <div className="flex items-center mb-4">
                 {/* Back Button */}
-                <Link
+                {/* <Link
                   href="/"
                   className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
                   title="Back to Landing"
@@ -368,7 +311,7 @@ export default function MPCSection({ initialSlug }: MPCSectionProps) {
                 >
                   <ArrowLeft size={20} />
                   <span className="hidden sm:inline">Back</span>
-                </Link>
+                </Link> */}
 
                 {/* Mobile sidebar toggle button */}
                 {isClient && (
@@ -402,7 +345,7 @@ export default function MPCSection({ initialSlug }: MPCSectionProps) {
                 </div>
                 
                 {/* Footer */}
-                <footer className="mt-12 pt-8 border-t border-gray-200">
+                <footer className="mt-12 pt-8">
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Research effort led by yAcademy</span>
                     <a

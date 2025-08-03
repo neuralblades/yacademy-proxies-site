@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Search, ChevronRight, ChevronDown, Book, Shield, Code, FileText, ExternalLink, Menu, X, List, ArrowLeft } from 'lucide-react';
-import { Navbar, MobileNavbar } from './Navbar';
 import UnifiedSidebar, { SidebarItem } from './UnifiedSidebar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -24,11 +23,6 @@ interface ProxiesSiteProps {
 const ClientOnlySearch = dynamic(() => Promise.resolve(SearchComponent), {
   ssr: false,
   loading: () => <SearchSkeleton />
-});
-
-const ClientOnlyMobileMenu = dynamic(() => Promise.resolve(MobileMenuComponent), {
-  ssr: false,
-  loading: () => null
 });
 
 const ClientOnlySidebar = dynamic(() => Promise.resolve(UnifiedSidebar), {
@@ -153,31 +147,6 @@ function SearchComponent({
   );
 }
 
-// Extracted mobile menu component for navbar
-interface MobileMenuComponentProps {
-  isMobileMenuOpen: boolean;
-  setIsMobileMenuOpen: (open: boolean) => void;
-}
-
-function MobileMenuComponent({ 
-  isMobileMenuOpen, 
-  setIsMobileMenuOpen 
-}: MobileMenuComponentProps) {
-  if (!isMobileMenuOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="fixed inset-0" onClick={() => setIsMobileMenuOpen(false)} />
-      <div className="fixed top-0 left-0 w-full h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
-        <MobileNavbar 
-          setMenuOpen={setIsMobileMenuOpen}
-        />
-      </div>
-    </div>
-  );
-}
-
-
 // Main component
 const ProxiesSite: React.FC<ProxiesSiteProps> = ({ 
   initialContent = [], 
@@ -194,7 +163,6 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showTableOfContents, setShowTableOfContents] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -209,6 +177,13 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
   // Client-side hydration fix
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // Utility functions
+  const highlightSearchTerm = useCallback((text: string, term: string) => {
+    if (!term) return text;
+    const regex = new RegExp(`(${term})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
   }, []);
 
   // Handle hash fragments on page load and changes
@@ -302,7 +277,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
       }));
     
     setSearchResults(results);
-  }, [searchQuery, searchIndex]);
+  }, [searchQuery, searchIndex, highlightSearchTerm]);
   
   // Click outside handler for search dropdown
   useEffect(() => {
@@ -342,7 +317,6 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
       if (e.key === 'Escape') {
         setIsSearchFocused(false);
         setSearchQuery('');
-        setIsMobileMenuOpen(false);
         setIsSidebarOpen(false);
       }
     };
@@ -352,12 +326,6 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
   }, [isClient]);
   
   // Utility functions
-  const highlightSearchTerm = useCallback((text: string, term: string) => {
-    if (!term) return text;
-    const regex = new RegExp(`(${term})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-  }, []);
-  
   const toggleSection = useCallback((sectionId: string) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -546,7 +514,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
       // Longer delay to ensure content is rendered
       setTimeout(() => scrollToHash(hash), 1000);
     }
-  }, [isClient, currentPageData]);
+  }, [isClient, currentPageData, initialContent, setCurrentPage]);
   
   // Floating TOC
   const floatingTOC = useMemo(() => {
@@ -625,34 +593,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      {/* Header with imported Navbar */}
-      <header className="sticky top-0 z-50 bg-white border-gray-200 border-b">
-        {isClient ? (
-          <Navbar 
-            menuOpen={isMobileMenuOpen}
-            setMenuOpen={setIsMobileMenuOpen}
-          />
-        ) : (
-          <div className="h-16 bg-white border-b border-gray-200 animate-pulse">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="h-8 bg-gray-200 rounded w-32"></div>
-                <div className="h-8 bg-gray-200 rounded w-24"></div>
-              </div>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* Mobile Menu for Navbar */}
-      {isClient && (
-        <ClientOnlyMobileMenu
-          isMobileMenuOpen={isMobileMenuOpen}
-          setIsMobileMenuOpen={setIsMobileMenuOpen}
-        />
-      )}
-
-      {/* Centered container with max-width and margin auto */}
+      {/* Main Container */}
       <div className="max-w-7xl mx-auto flex relative">
         
         {/* Sidebar */}
@@ -674,11 +615,11 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
         {/* Main Content */}
         <main className="flex-1 min-w-0 md:ml-0">
           {/* Search Section */}
-          <div className="px-8 py-6 md:px-12 lg:px-16 border-b border-gray-200">
+          <div className="px-8 py-6 md:px-12 lg:px-16">
             <div className="max-w-4xl"> 
               <div className="flex items-center mb-4">
                 {/* Back Button */}
-                <Link
+                {/* <Link
                   href="/"
                   className="mr-4 p-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900"
                   title="Back to Landing"
@@ -686,7 +627,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
                 >
                   <ArrowLeft size={20} />
                   <span className="hidden sm:inline">Back</span>
-                </Link>
+                </Link> */}
 
                 {/* Mobile sidebar toggle button */}
                 {isClient && (
@@ -785,7 +726,7 @@ const ProxiesSite: React.FC<ProxiesSiteProps> = ({
                 </div>
                 
                 {/* Footer */}
-                <footer className="mt-12 pt-8 border-t border-gray-200">
+                <footer className="mt-12 pt-8">
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <span>Research effort led by engn33r and devtooligan of yAcademy</span>
                     <a

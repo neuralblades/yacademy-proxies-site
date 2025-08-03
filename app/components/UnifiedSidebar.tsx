@@ -136,7 +136,7 @@ export default function UnifiedSidebar({
       {/* Sidebar */}
       <aside className={`${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 fixed md:sticky top-16 left-0 md:left-auto z-40 w-64 md:w-72 h-screen md:h-[calc(100vh-4rem)] bg-gray-50 border-gray-200 border-r transition-transform duration-300 ease-in-out overflow-y-auto`}>
+      } md:translate-x-0 fixed md:sticky top-16 left-0 md:left-auto z-40 w-64 md:w-72 h-screen bg-gray-50 transition-transform duration-300 ease-in-out overflow-y-auto`}>
         <div className="p-6">
           <nav className="space-y-2" role="navigation" aria-label={navigationLabel}>
             {sidebarItems.map((item) => (
